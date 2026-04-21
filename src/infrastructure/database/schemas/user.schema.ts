@@ -1,21 +1,34 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
+
+import { AbstractSchema } from './abstract.schema';
 
 export type UserDocument = HydratedDocument<User>;
 
-@Schema({ timestamps: true })
-export class User {
+@Schema({
+  timestamps: true,
+  toJSON: {
+    virtuals: true,
+    transform: (_, ret: Record<string, unknown>) => {
+      ret.id = (ret._id as Types.ObjectId).toString();
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    },
+  },
+})
+export class User extends AbstractSchema {
   @Prop({ required: true, trim: true })
-  name: string;
+  declare name: string;
 
   @Prop({ required: true, unique: true, lowercase: true, trim: true })
-  email: string;
+  declare email: string;
 
   @Prop({ required: true })
-  birthday: Date;
+  declare birthday: Date;
 
   @Prop({ required: true })
-  timezone: string;
+  declare timezone: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

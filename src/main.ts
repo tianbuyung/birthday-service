@@ -6,20 +6,24 @@ import {
 } from '@nestjs/platform-fastify';
 import { Logger } from 'nestjs-pino';
 
-import { AppConfigService } from './app-config.service';
-import { AppModule } from './app.module';
-import { swaggerConfig } from './config/swagger.config';
+import { AppConfigService } from '@/app-config.service';
+import { AppModule } from '@/app.module';
+import { HttpExceptionFilter } from '@/common/filters/http-exception.filter';
+import { ResponseInterceptor } from '@/common/interceptors/response.interceptor';
+import { swaggerConfig } from '@/config/swagger.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
     new FastifyAdapter(),
-    { bufferLogs: true }, // buffer logs until Pino is ready
+    { bufferLogs: true },
   );
   const logger = app.get(Logger);
   const { host, port } = app.get(AppConfigService).server;
 
   app.useLogger(logger);
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
   app.setGlobalPrefix('api');
   swaggerConfig(app);
   app.useGlobalPipes(

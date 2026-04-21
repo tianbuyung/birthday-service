@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 
 import { DatabaseConfig, databaseConfig } from './config/database.config';
-import { User, UserSchema } from './schemas/user.schema';
 
 @Module({
   imports: [
@@ -14,8 +13,6 @@ import { User, UserSchema } from './schemas/user.schema';
       }),
       inject: [databaseConfig.KEY],
     }),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
-  exports: [MongooseModule],
 })
 export class DatabaseModule {}

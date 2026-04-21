@@ -5,6 +5,6 @@ import { HealthModule } from './health/health.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [UsersModule, BirthdayModule, HealthModule],
+  imports: [HealthModule, UsersModule, BirthdayModule],
 })
 export class ApiModule {}
