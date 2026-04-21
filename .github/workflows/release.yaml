@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  workflow_dispatch: # 👈 REQUIRED for manual trigger
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      HUSKY: 0
+
+    steps:
+      # Step 1: Checkout repository (full history + PAT required for semantic-release pushback)
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
+
+      # Step 2: Setup pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6.0.2
+        with:
+          version: latest
+          run_install: false
+
+      # Step 3: Setup Node.js environment
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "pnpm"
+
+      # Step 4: Install dependencies with lockfile check
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Step 5: Run Lint
+      - name: Run Lint
+        run: pnpm lint
+
+      # Step 6: Build Project
+      - name: Build Project
+        run: pnpm build
+
+      # Step 7: Run Semantic Release (main branch only)
+      - name: Release
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: pnpm dlx semantic-release
