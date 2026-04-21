@@ -1,0 +1,52 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo_birthday_service
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      app_network:
+        aliases:
+          - mongo
+    healthcheck:
+      test: [ "CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  server:
+    container_name: server_birthday_service
+    profiles: ["production"]
+    build: .
+    ports:
+      - "3002:3002"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    networks:
+      app_network:
+        aliases:
+          - server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  mongo_data:
+
+networks:
+  app_network:
+    driver: bridge
