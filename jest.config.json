@@ -9,6 +9,13 @@
     "**/*.(t|j)s",
     "!**/*.spec.ts",
     "!**/*.interface.ts",
+    "!**/*.module.ts",
+    "!**/*.fixtures.ts",
+    "!**/*.provider.ts",
+    "!**/main.ts",
+    "!**/config/**",
+    "!**/logger/**",
+    "!**/__mocks__/**",
     "!**/node_modules/**",
     "!**/dist/**"
   ],
@@ -16,7 +23,8 @@
   "coverageReporters": ["text", "lcov", "html"],
   "testEnvironment": "node",
   "moduleNameMapper": {
-    "^@/(.*)$": "<rootDir>/$1"
+    "^@/(.*)$": "<rootDir>/$1",
+    "^agenda$": "<rootDir>/__mocks__/agenda.ts"
   },
   "clearMocks": true,
   "restoreMocks": true,
