@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 
@@ -32,3 +33,19 @@ export class User extends AbstractSchema {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+const MONGO_DUPLICATE_KEY_CODE = 11000;
+
+UserSchema.post(
+  'save',
+  function (error: Error, _doc: unknown, next: (err?: Error) => void): void {
+    if (
+      'code' in error &&
+      (error as unknown as { code: number }).code === MONGO_DUPLICATE_KEY_CODE
+    ) {
+      next(new ConflictException('A user with that email already exists'));
+    } else {
+      next(error);
+    }
+  },
+);

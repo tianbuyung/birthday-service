@@ -7,19 +7,21 @@ import {
   databaseConfig,
 } from '@/infrastructure/database/config/database.config';
 
+import { type AgendaConfig, agendaConfig } from './config/agenda.config';
 import { AGENDA_TOKEN } from './scheduler.constants';
 
 export const agendaProvider: FactoryProvider<Agenda> = {
   provide: AGENDA_TOKEN,
-  inject: [databaseConfig.KEY],
-  useFactory: (dbConf: DatabaseConfig): Agenda => {
+  inject: [databaseConfig.KEY, agendaConfig.KEY],
+  useFactory: (dbConf: DatabaseConfig, agConf: AgendaConfig): Agenda => {
     return new Agenda({
       backend: new MongoBackend({
         address: dbConf.uri,
-        collection: dbConf.agendaCollection,
+        collection: agConf.collection,
       }),
-      defaultConcurrency: dbConf.agendaConcurrency,
-      maxConcurrency: dbConf.agendaConcurrency,
+      defaultConcurrency: agConf.concurrency,
+      maxConcurrency: agConf.concurrency,
+      processEvery: agConf.processEvery,
     });
   },
 };

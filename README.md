@@ -1,98 +1,278 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Birthday Reminder Service
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+A NestJS backend that manages users and automatically sends "Happy Birthday" messages at **9 AM in each user's local timezone** on their birthday.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Tech Stack
 
-## Description
+| Layer            | Technology              |
+| ---------------- | ----------------------- |
+| Runtime          | Node.js 22, TypeScript  |
+| Framework        | NestJS + Fastify        |
+| Database         | MongoDB + Mongoose      |
+| Scheduler        | Agenda (MongoDB-backed) |
+| Timezone math    | Luxon                   |
+| Validation       | class-validator + Zod   |
+| Logging          | Pino (nestjs-pino)      |
+| Testing          | Jest                    |
+| Containerization | Docker + docker-compose |
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Prerequisites
 
-```bash
-$ pnpm install
-```
+- [Docker](https://docs.docker.com/get-docker/) + Docker Compose
+- [Node.js 22+](https://nodejs.org/) _(local dev only)_
+- [pnpm](https://pnpm.io/installation) _(local dev only)_
 
-## Compile and run the project
+---
 
-```bash
-# development
-$ pnpm run start
+## Running with Docker (Production)
 
-# watch mode
-$ pnpm run start:dev
+This is the recommended way to run the full stack.
 
-# production mode
-$ pnpm run start:prod
-```
-
-## Run tests
+### 1. Clone the repo and enter the service directory
 
 ```bash
-# unit tests
-$ pnpm run test
-
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+cd birthday-service
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+### 2. Start MongoDB + the app server
 
 ```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+docker compose --profile production up -d --build
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+The API will be available at `http://localhost:3002/api`.
+Swagger UI: `http://localhost:3002/documentation`
 
-## Resources
+To stop:
 
-Check out a few resources that may come in handy when working with NestJS:
+```bash
+docker compose --profile production down
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+> MongoDB data is persisted in a named Docker volume (`mongo_data`).
 
-## Support
+---
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Local Development
 
-## Stay in touch
+### 1. Install dependencies
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+pnpm install
+```
 
-## License
+### 2. Start MongoDB only
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```bash
+docker compose up -d
+```
+
+### 3. Copy and fill environment variables
+
+```bash
+cp .env.example .env
+# Edit .env — defaults are already set for local development
+```
+
+### 4. Start the dev server (hot reload on port 3002)
+
+```bash
+pnpm run start:dev
+```
+
+### Environment Variables
+
+| Variable             | Description                    | Default                                      |
+| -------------------- | ------------------------------ | -------------------------------------------- |
+| `NODE_ENV`           | `development` / `production`   | `development`                                |
+| `SERVICE_NAME`       | Application name shown in logs | `Birthday Reminder`                          |
+| `HOST`               | Bind address                   | `localhost`                                  |
+| `PORT`               | HTTP port                      | `3002`                                       |
+| `WHITELIST`          | Comma-separated CORS origins   | `http://localhost:3002`                      |
+| `MONGODB_URI`        | MongoDB connection string      | `mongodb://localhost:27017/birthday_service` |
+| `AGENDA_COLLECTION`    | Agenda jobs collection name              | `agendaJobs`                                 |
+| `AGENDA_CONCURRENCY`   | Max concurrent Agenda jobs               | `5`                                          |
+| `AGENDA_PROCESS_EVERY` | How often Agenda polls for due jobs      | `30 seconds`                                 |
+
+---
+
+## API Reference
+
+All endpoints are prefixed with `/api`. Swagger UI at `/documentation`.
+
+### Create a User
+
+```bash
+POST /api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "birthday": "1990-04-21",
+  "timezone": "Asia/Jakarta"
+}
+```
+
+Response `201`:
+
+```json
+{
+  "data": {
+    "id": "6629f1a2b3c4d5e6f7a8b9c0",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "birthday": "1990-04-21T00:00:00.000Z",
+    "timezone": "Asia/Jakarta",
+    "createdAt": "2025-04-21T12:00:00.000Z",
+    "updatedAt": "2025-04-21T12:00:00.000Z"
+  },
+  "statusCode": 201,
+  "timestamp": "2025-04-21T12:00:00.000Z"
+}
+```
+
+### Get All Users
+
+```bash
+GET /api/users
+```
+
+### Get a User by ID
+
+```bash
+GET /api/users/:id
+```
+
+### Update a User
+
+```bash
+PATCH /api/users/:id
+Content-Type: application/json
+
+{
+  "timezone": "America/New_York"
+}
+```
+
+Updating `birthday` or `timezone` automatically reschedules the birthday job.
+
+### Delete a User
+
+```bash
+DELETE /api/users/:id
+```
+
+Deleting a user also cancels their pending birthday job.
+
+### Health Check
+
+```bash
+GET /api/health
+```
+
+---
+
+## Running Tests
+
+### Unit tests
+
+```bash
+pnpm run test
+```
+
+### Watch mode
+
+```bash
+pnpm run test:watch
+```
+
+### Coverage report
+
+```bash
+pnpm run test:cov
+```
+
+### Coverage Summary
+
+| Metric     | Coverage |
+| ---------- | -------- |
+| Statements | 100%     |
+| Functions  | 100%     |
+| Lines      | 100%     |
+| Branches   | 80.9%    |
+
+56 tests across 13 suites — all passing.
+
+---
+
+## Design Decisions & Assumptions
+
+### Scheduler: Agenda over cron polling
+
+Rather than scanning all users on a tight polling interval (e.g. every minute), the service schedules one Agenda job **per user** at the exact fire time: 9 AM in their local timezone on their birthday. This means:
+
+- Zero wasted DB reads between birthdays
+- Scales to millions of users — only the jobs due now are touched
+- Jobs are persisted in MongoDB, so they survive restarts
+
+On create, the next birthday 9 AM is computed and a job is upserted via `job.unique()` (MongoDB `findOneAndUpdate`) — safe under concurrent requests. On update or delete, the job is cancelled and recreated (or simply cancelled).
+
+After firing, the job **reschedules itself** for the following year without a DB lookup — all necessary data is stored in the job payload (`birthday`, `timezone`).
+
+### Timezone math: Luxon
+
+`computeNextBirthday9AM` builds the candidate date in the user's local zone, then advances by one year if the time has already passed. Luxon handles leap-day birthdays (Feb 29) on non-leap years by landing on Feb 28.
+
+### Email simulation
+
+The assignment permits console-log as the "Happy Birthday" message. `EmailService.sendBirthdayGreeting` logs the message via Pino — it is designed so a real provider (SendGrid, SES, Resend etc.) can be wired in without changing any calling code.
+
+### Partial updates use `$set`
+
+Mongoose 7+ treats a plain object passed to `findOneAndUpdate` as a full replacement. All PATCH operations explicitly wrap the update in `{ $set: { ... } }` to avoid accidental field removal.
+
+### Birthday stored as `Date`, received as ISO 8601 string
+
+The API accepts `birthday` as an ISO 8601 date string (`YYYY-MM-DD`), validates it with `@IsISO8601({ strict: true })`, and stores it as a `Date` in MongoDB. The job payload serialises it back to an ISO string so the job can reschedule without a DB lookup.
+
+### Email uniqueness
+
+`email` is stored lowercase and has a unique index. Duplicate email registration returns a `409 Conflict` via the global exception filter.
+
+---
+
+## Known Limitations
+
+### Polling delay
+Agenda works by polling MongoDB on a fixed interval (`AGENDA_PROCESS_EVERY`). With the default of **30 seconds**, a birthday greeting can fire up to 30 seconds after 9 AM. For a daily event this is acceptable, but it is not a true real-time trigger.
+
+### Worker is co-located with the REST API
+`BirthdayService` starts the Agenda worker inside the same NestJS process as the HTTP server. Scaling API replicas horizontally means every pod also runs a worker and polls MongoDB. Agenda's MongoDB locking prevents double-sends, but the redundant workers waste resources and add unnecessary load on the database.
+
+### No retry on email failure
+If `EmailService.sendBirthdayGreeting` throws, the error is logged and the job still completes — it reschedules itself for next year. A failed send this year is silently lost.
+
+### No same-day backfill
+If a user is created after 9 AM on their own birthday, `computeNextBirthday9AM` schedules the job for next year. They receive no greeting today. This is an intentional simplification.
+
+---
+
+## Future Improvements
+
+### Separate the worker into its own process
+Extract `BirthdayService` into a standalone NestJS worker app (or a separate microservice). The REST API and the worker can then be scaled independently — API pods handle HTTP traffic only, worker pods handle job processing only — with no wasted resources.
+
+### Replace Agenda with a dedicated queue system
+Swap the MongoDB-polling scheduler for a push-based queue (e.g. **BullMQ + Redis** or **AWS SQS**). A separate scheduler service computes the 9 AM fire time per user and enqueues a delayed job; worker consumers process it on delivery with no polling overhead. This eliminates the polling delay and decouples scheduling from execution.
+
+### Wire in a real email provider
+`EmailService` is designed for easy replacement. Integrating SendGrid, AWS SES, or Resend requires only changes inside `email.service.ts` — no other code changes needed.
+
+### Retry and dead-letter strategy
+Use Agenda's built-in failure handling (`job.fail()` + retry options in `.define()`) to retry a failed send up to N times before moving the job to a dead-letter collection for manual inspection.
+
+### Observability
+Expose Prometheus metrics (jobs scheduled, fired, failed, processing latency) and add distributed tracing to make the scheduler behaviour visible in production dashboards.
