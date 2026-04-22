@@ -49,7 +49,11 @@ export class BirthdayService implements OnModuleInit, OnApplicationShutdown {
         const { userId, name, email, birthday, timezone } = job.attrs.data;
 
         this.logger.info({ userId }, `Sending birthday greeting to ${name}`);
-        this.emailService.sendBirthdayGreeting(name, email);
+        try {
+          await this.emailService.sendBirthdayGreeting(name, email);
+        } catch (err) {
+          this.logger.error({ userId, err }, 'Birthday email failed');
+        }
 
         // Reschedule for the same birthday next year without a DB lookup
         await this.schedule({ userId, name, email, birthday, timezone });
@@ -59,9 +63,9 @@ export class BirthdayService implements OnModuleInit, OnApplicationShutdown {
   }
 
   /**
-   * Cancels any existing birthday job for this user, then schedules a new one
-   * at 9 AM on their next birthday in their local timezone.
-   * Safe to call on create, update, and within the job handler itself.
+   * Atomically upserts the birthday job for this user using job.unique(),
+   * which maps to a MongoDB findOneAndUpdate — safe under concurrent calls.
+   * Fires at 9 AM on the next occurrence of the user's birthday in their timezone.
    */
   async schedule(data: BirthdayJobData): Promise<void> {
     const fireAt = computeNextBirthday9AM(
@@ -69,8 +73,10 @@ export class BirthdayService implements OnModuleInit, OnApplicationShutdown {
       data.timezone,
     );
 
-    await this.agenda.cancel({ data: { userId: data.userId } });
-    await this.agenda.schedule(fireAt, BIRTHDAY_JOB_NAME, data);
+    const job = this.agenda.create(BIRTHDAY_JOB_NAME, data);
+    job.unique({ 'data.userId': data.userId });
+    job.schedule(fireAt);
+    await job.save();
 
     this.logger.info({ userId: data.userId, fireAt }, 'Birthday job scheduled');
   }
