@@ -19,14 +19,8 @@ import { ParseObjectIdPipe } from '@/common/pipes/parse-object-id.pipe';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserResponseDto } from './dto/user-response.dto';
+import { USER_ID_PARAM } from './users.constants';
 import { UsersService } from './users.service';
-
-const USER_ID_PARAM = {
-  name: 'id',
-  type: String,
-  description: 'User MongoDB ObjectId',
-  example: '6634a1f2e4b0c123456789ab',
-};
 
 @ApiTags('Users')
 @Controller('users')

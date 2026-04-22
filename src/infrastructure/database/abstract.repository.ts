@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Model, QueryFilter, Types, UpdateQuery } from 'mongoose';
 import { PinoLogger } from 'nestjs-pino';
 
+import { DOCUMENT_NOT_FOUND_MSG } from './database.constants';
 import { AbstractSchema } from './schemas/abstract.schema';
 
 export abstract class AbstractRepository<T extends AbstractSchema> {
@@ -9,7 +10,7 @@ export abstract class AbstractRepository<T extends AbstractSchema> {
 
   constructor(public readonly model: Model<T>) {}
 
-  async create(document: Omit<T, '_id'>): Promise<T> {
+  async create(document: Omit<T, '_id' | 'id'>): Promise<T> {
     const createdDocument = new this.model({
       ...document,
       _id: new Types.ObjectId(),
@@ -27,8 +28,8 @@ export abstract class AbstractRepository<T extends AbstractSchema> {
     const document = await this.model.findOne(queryFilter);
 
     if (!document) {
-      this.logger.warn({ queryFilter }, 'Document not found');
-      throw new NotFoundException('Document not found.');
+      this.logger.warn({ queryFilter }, DOCUMENT_NOT_FOUND_MSG);
+      throw new NotFoundException(DOCUMENT_NOT_FOUND_MSG);
     }
 
     return document.toJSON();
@@ -39,12 +40,12 @@ export abstract class AbstractRepository<T extends AbstractSchema> {
     update: UpdateQuery<T>,
   ): Promise<T> {
     const document = await this.model.findOneAndUpdate(queryFilter, update, {
-      new: true,
+      returnDocument: 'after',
     });
 
     if (!document) {
-      this.logger.warn({ queryFilter }, 'Document not found');
-      throw new NotFoundException('Document not found.');
+      this.logger.warn({ queryFilter }, DOCUMENT_NOT_FOUND_MSG);
+      throw new NotFoundException(DOCUMENT_NOT_FOUND_MSG);
     }
 
     return document.toJSON();
@@ -54,8 +55,8 @@ export abstract class AbstractRepository<T extends AbstractSchema> {
     const document = await this.model.findOneAndDelete(queryFilter);
 
     if (!document) {
-      this.logger.warn({ queryFilter }, 'Document not found');
-      throw new NotFoundException('Document not found.');
+      this.logger.warn({ queryFilter }, DOCUMENT_NOT_FOUND_MSG);
+      throw new NotFoundException(DOCUMENT_NOT_FOUND_MSG);
     }
 
     return document.toJSON();

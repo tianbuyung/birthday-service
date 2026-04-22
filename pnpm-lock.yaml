@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@agendajs/mongo-backend':
+        specifier: ^4.0.1
+        version: 4.0.1(agenda@6.2.4)(mongodb@7.1.1)
       '@fastify/static':
         specifier: ^9.1.3
         version: 9.1.3
@@ -206,6 +209,13 @@ packages:
 
   '@actions/io@3.0.2':
     resolution: {integrity: sha512-nRBchcMM+QK1pdjO7/idu86rbJI5YHUKCvKs0KxnSYbVe3F51UfGxuZX4Qy/fWlp6l7gWFwIkrOzN+oUK03kfw==}
+
+  '@agendajs/mongo-backend@4.0.1':
+    resolution: {integrity: sha512-detHxM9m2wWzPawaBlGyTJkZe1KNsJYhYjB7iftfCPjubWYo7UCMno2/fRRNnhcodeK8NPXtlqn3aOI+AEBtaA==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      agenda: 6.2.4
+      mongodb: ^6.0.0 || ^7.0.0
 
   '@angular-devkit/core@19.2.24':
     resolution: {integrity: sha512-Kd49warf6U/EyWe5BszF/eebN3zQ3bk7tgfEljAw8q/rX95UUtriJubWvp6pgzHfzBA4jwq8f+QiNZB8eBEXPA==}
@@ -5081,6 +5091,14 @@ snapshots:
       undici: 6.25.0
 
   '@actions/io@3.0.2': {}
+
+  '@agendajs/mongo-backend@4.0.1(agenda@6.2.4)(mongodb@7.1.1)':
+    dependencies:
+      agenda: 6.2.4
+      debug: 4.4.3
+      mongodb: 7.1.1
+    transitivePeerDependencies:
+      - supports-color
 
   '@angular-devkit/core@19.2.24(chokidar@4.0.3)':
     dependencies:

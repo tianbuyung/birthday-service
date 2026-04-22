@@ -11,6 +11,8 @@ import {
 
 import { type AppConfig, appConfig } from '@/config/app.config';
 
+import { HEALTH_KEYS, HEALTH_THRESHOLDS } from './health.constants';
+
 @ApiTags('Health')
 @Controller('health')
 export class HealthController {
@@ -36,12 +38,29 @@ export class HealthController {
     ).toString();
 
     return this.health.check([
+      // Alerts when disk usage exceeds 70% — prevents log/data write failures
       () =>
-        this.disk.checkStorage('disk', { thresholdPercent: 0.7, path: '/' }),
-      () => this.memory.checkHeap('memory_heap', 150 * 1024 * 1024),
-      () => this.memory.checkRSS('memory_rss', 500 * 1024 * 1024),
-      () => this.mongoose.pingCheck('mongodb'),
-      () => this.http.pingCheck('docs', docsUrl),
+        this.disk.checkStorage(HEALTH_KEYS.DISK, {
+          thresholdPercent: HEALTH_THRESHOLDS.DISK_PERCENT,
+          path: HEALTH_THRESHOLDS.DISK_PATH,
+        }),
+      // V8 heap: memory actively used by JS objects. High heap = memory leak risk
+      () =>
+        this.memory.checkHeap(
+          HEALTH_KEYS.MEMORY_HEAP,
+          HEALTH_THRESHOLDS.MEMORY_HEAP_BYTES,
+        ),
+      // RSS (Resident Set Size): total physical RAM the process holds, including
+      // heap, stack, and native buffers. High RSS with normal heap = native leak
+      () =>
+        this.memory.checkRSS(
+          HEALTH_KEYS.MEMORY_RSS,
+          HEALTH_THRESHOLDS.MEMORY_RSS_BYTES,
+        ),
+      // Verifies MongoDB is reachable and accepting queries
+      () => this.mongoose.pingCheck(HEALTH_KEYS.MONGODB),
+      // Verifies the Swagger docs endpoint is reachable (proxy/network sanity check)
+      () => this.http.pingCheck(HEALTH_KEYS.DOCS, docsUrl),
     ]);
   }
 }
