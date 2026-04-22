@@ -1,6 +1,6 @@
 {
   "name": "birthday-reminder-service",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "API for managing users and birthday reminder scheduling",
   "author": {
     "name": "tianbuyung",
