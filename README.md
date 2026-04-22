@@ -33,10 +33,21 @@ This is the recommended way to run the full stack.
 ### 1. Clone the repo and enter the service directory
 
 ```bash
-cd birthday-service
+git clone https://github.com/tianbuyung/birthday-reminder-service.git
 ```
 
-### 2. Start MongoDB + the app server
+```bash
+cd birthday-reminder-service
+```
+
+### 2. Create and fill the Docker environment file
+
+```bash
+cp .env.example .env.docker
+# Edit .env.docker — set NODE_ENV=production and MONGODB_URI=mongodb://mongo:27017/birthday_service
+```
+
+### 3. Start MongoDB + the app server
 
 ```bash
 docker compose --profile production up -d --build
@@ -73,7 +84,7 @@ docker compose up -d
 
 ```bash
 cp .env.example .env
-# Edit .env — defaults are already set for local development
+# Edit .env — fill in the values based on the Environment Variables table below
 ```
 
 ### 4. Start the dev server (hot reload on port 3002)
@@ -84,17 +95,17 @@ pnpm run start:dev
 
 ### Environment Variables
 
-| Variable             | Description                    | Default                                      |
-| -------------------- | ------------------------------ | -------------------------------------------- |
-| `NODE_ENV`           | `development` / `production`   | `development`                                |
-| `SERVICE_NAME`       | Application name shown in logs | `Birthday Reminder`                          |
-| `HOST`               | Bind address                   | `localhost`                                  |
-| `PORT`               | HTTP port                      | `3002`                                       |
-| `WHITELIST`          | Comma-separated CORS origins   | `http://localhost:3002`                      |
-| `MONGODB_URI`        | MongoDB connection string      | `mongodb://localhost:27017/birthday_service` |
-| `AGENDA_COLLECTION`    | Agenda jobs collection name              | `agendaJobs`                                 |
-| `AGENDA_CONCURRENCY`   | Max concurrent Agenda jobs               | `5`                                          |
-| `AGENDA_PROCESS_EVERY` | How often Agenda polls for due jobs      | `30 seconds`                                 |
+| Variable               | Description                         | Default                                      |
+| ---------------------- | ----------------------------------- | -------------------------------------------- |
+| `NODE_ENV`             | `development` / `production`        | `development`                                |
+| `SERVICE_NAME`         | Application name shown in logs      | `Birthday Reminder`                          |
+| `HOST`                 | Bind address                        | `localhost`                                  |
+| `PORT`                 | HTTP port                           | `3002`                                       |
+| `WHITELIST`            | Comma-separated CORS origins        | `http://localhost:3002`                      |
+| `MONGODB_URI`          | MongoDB connection string           | `mongodb://localhost:27017/birthday_service` |
+| `AGENDA_COLLECTION`    | Agenda jobs collection name         | `agendaJobs`                                 |
+| `AGENDA_CONCURRENCY`   | Max concurrent Agenda jobs          | `5`                                          |
+| `AGENDA_PROCESS_EVERY` | How often Agenda polls for due jobs | `30 seconds`                                 |
 
 ---
 
@@ -247,15 +258,19 @@ The API accepts `birthday` as an ISO 8601 date string (`YYYY-MM-DD`), validates 
 ## Known Limitations
 
 ### Polling delay
+
 Agenda works by polling MongoDB on a fixed interval (`AGENDA_PROCESS_EVERY`). With the default of **30 seconds**, a birthday greeting can fire up to 30 seconds after 9 AM. For a daily event this is acceptable, but it is not a true real-time trigger.
 
 ### Worker is co-located with the REST API
+
 `BirthdayService` starts the Agenda worker inside the same NestJS process as the HTTP server. Scaling API replicas horizontally means every pod also runs a worker and polls MongoDB. Agenda's MongoDB locking prevents double-sends, but the redundant workers waste resources and add unnecessary load on the database.
 
 ### No retry on email failure
+
 If `EmailService.sendBirthdayGreeting` throws, the error is logged and the job still completes — it reschedules itself for next year. A failed send this year is silently lost.
 
 ### No same-day backfill
+
 If a user is created after 9 AM on their own birthday, `computeNextBirthday9AM` schedules the job for next year. They receive no greeting today. This is an intentional simplification.
 
 ---
@@ -263,16 +278,21 @@ If a user is created after 9 AM on their own birthday, `computeNextBirthday9AM` 
 ## Future Improvements
 
 ### Separate the worker into its own process
+
 Extract `BirthdayService` into a standalone NestJS worker app (or a separate microservice). The REST API and the worker can then be scaled independently — API pods handle HTTP traffic only, worker pods handle job processing only — with no wasted resources.
 
 ### Replace Agenda with a dedicated queue system
+
 Swap the MongoDB-polling scheduler for a push-based queue (e.g. **BullMQ + Redis** or **AWS SQS**). A separate scheduler service computes the 9 AM fire time per user and enqueues a delayed job; worker consumers process it on delivery with no polling overhead. This eliminates the polling delay and decouples scheduling from execution.
 
 ### Wire in a real email provider
+
 `EmailService` is designed for easy replacement. Integrating SendGrid, AWS SES, or Resend requires only changes inside `email.service.ts` — no other code changes needed.
 
 ### Retry and dead-letter strategy
+
 Use Agenda's built-in failure handling (`job.fail()` + retry options in `.define()`) to retry a failed send up to N times before moving the job to a dead-letter collection for manual inspection.
 
 ### Observability
+
 Expose Prometheus metrics (jobs scheduled, fired, failed, processing latency) and add distributed tracing to make the scheduler behaviour visible in production dashboards.
